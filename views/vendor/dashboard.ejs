@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <title>Document</title>
+    <style>
+      #vendorLayout {
+        display: flex;
+        flex-direction: row;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: "Inter", sans-serif;
+      }
+      #full {
+        display: flex;
+        flex-direction: row;
+      }
+      #welcome {
+        margin-left: auto;
+      }
+      #topNav {
+        display: flex;
+        flex-direction: row;
+        height: 10%;
+        padding: 1%;
+        align-items: center;
+      }
+      #content {
+        flex: 1;
+      }
+      #Logout {
+        margin-left: 1%;
+      }
+      #nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #home {
+        margin-left: auto;
+      }
+      #dashboard {
+        padding: 1%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="full">
+      <div id="sideBar"><%- include('../layouts/vendorLayout') %></div>
+      <div id="content">
+        <div id="topNav">
+          <span id="welcome">Welcome Vendor</span>
+          <button id="Logout">Logout</button>
+        </div>
+        <div id="afterNav">
+          <div id="nav">
+            <h3>Dashboard</h3>
+            <span id="home">Home</span>
+          </div>
+          <div id="dis">
+            <span>Welcome to RFP System</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

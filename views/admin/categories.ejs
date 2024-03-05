@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <style>
+      #action {
+        color: red;
+        font-style: italic;
+        cursor: pointer;
+      }
+      #adminLayout {
+        display: flex;
+        flex-direction: row;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #welcome {
+        margin-left: auto;
+      }
+      #logout {
+        text-decoration: none;
+        color: blue;
+        margin-left: 1%;
+      }
+      #nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #home {
+        margin-left: auto;
+      }
+      #categories {
+        padding: 1%;
+      }
+      #categoriesFields {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      #allData {
+        padding: 5%;
+        display: flex;
+        flex-direction: column;
+      }
+      #categoryBox {
+        display: flex;
+        flex-direction: row;
+      }
+      #addCategory {
+        margin-left: auto;
+      }
+      #dis {
+        margin-bottom: 2%;
+        padding-left: 2%;
+        padding-right: 2%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="full">
+      <div id="sideBar"><%- include('../layouts/adminLayout') %></div>
+      <div id="content">
+        <div id="topNav">
+          <span id="welcome">Welcome Admin</span>
+          <a href="/login" id="logout">Logout</a>
+        </div>
+        <div id="afterNav">
+          <div id="nav">
+            <h3>Categories</h3>
+            <span id="home">Home / Categories</span>
+          </div>
+          <div id="dis">
+            <div id="categoryBox">
+              <span>Categories</span>
+              <button id="addCategory" onclick="redirect()">
+                Add Category
+              </button>
+            </div>
+            <div id="allData">
+              <table>
+                <thead>
+                  <tr>
+                    <th>S.No.</th>
+                    <th>Categories Name</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% documents.forEach(object => { %>
+                  <tr>
+                    <td><%= object.serialNumber %></td>
+                    <td><%= object.category %></td>
+                    <td>
+                      <span
+                        class="badge"
+                        style="background-color: <%= object.status === 'active' ? '#65b741' : 'red' %>;"
+                        ><%= object.status %></span
+                      >
+                    </td>
+                    <td>
+                      <span
+                        onclick="postData('<%= object.serialNumber %>')"
+                        id="action"
+                        style="color: <%= object.action === 'Deactivate' ? 'red' : '#65b741' %>"
+                      >
+                        <%= object.action %>
+                      </span>
+                    </td>
+                  </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function postData(serialNumber) {
+        fetch("/categoryStatusUpdate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ serialNumber: serialNumber }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            // Return response.json() to parse JSON asynchronously
+            return response.json();
+          })
+          .then((data) => {
+            // Process the response data here
+            // You can redirect to another page here if needed
+            console.log(data.message);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            // Handle errors
+          });
+      }
+      function redirect() {
+        window.location.href = "/addCategory";
+      }
+      function logout() {
+        window.location.href = "/login";
+      }
+    </script>
+  </body>
+</html>

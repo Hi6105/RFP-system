@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <title>Document</title>
+    <style>
+      #adminLayout {
+        display: flex;
+        flex-direction: row;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #full {
+        display: flex;
+        flex-direction: row;
+      }
+      #welcome {
+        margin-left: auto;
+      }
+      #content {
+        flex: 1;
+      }
+      #Logout {
+        margin-left: 1%;
+      }
+      #nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #home {
+        margin-left: auto;
+      }
+      #action {
+        font-style: italic;
+        cursor: pointer;
+      }
+      #categories {
+        padding: 1%;
+      }
+      #categoriesFields {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      #allData {
+        padding: 5%;
+        display: flex;
+        flex-direction: column;
+      }
+      #categoryBox {
+        display: flex;
+        flex-direction: row;
+      }
+      #addCategory {
+        margin-left: auto;
+      }
+      #dis {
+        margin-bottom: 2%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="full">
+      <div id="sideBar"><%- include('../layouts/vendorLayout') %></div>
+      <div id="content">
+        <div id="topNav">
+          <span id="welcome">Welcome Vendor</span>
+          <button id="Logout">Logout</button>
+        </div>
+        <div id="afterNav">
+          <div id="nav">
+            <h3>RFP List</h3>
+            <span id="home">Home / RFP List</span>
+          </div>
+          <div id="dis">
+            <div id="categoryBox">
+              <span>RFP</span>
+            </div>
+            <div id="allData">
+              <table>
+                <thead>
+                  <tr>
+                    <th>RFP No.</th>
+                    <th>Item Name</th>
+                    <th>Last Date</th>
+                    <th>Min Price</th>
+                    <th>Max Price</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% Vendor_RFP_List.forEach(rfp => { %>
+                  <tr>
+                    <td><%= rfp.rfpNo %></td>
+                    <td><%= rfp.itemName %></td>
+                    <td><%= rfp.lastDate.toDateString() %></td>
+                    <td><%= rfp.minPrice %></td>
+                    <td><%= rfp.maxPrice %></td>
+                    <td>
+                      <span
+                        class="badge"
+                        style="background-color: <%= object.status === 'OPEN' ? '#65b741' : 'red' %>"
+                        ><%= rfp.status %></span
+                      >
+                    </td>
+                    <td>
+                      <% if (!rfp.applied) { %>
+                      <span
+                        onclick="applyForRFP('<%= rfp.rfpNo %>')"
+                        id="action"
+                        style="color: <%= object.action === 'Close' ? 'red' : '#65b741' %>"
+                      >
+                        Apply
+                      </span>
+                      <% } %>
+                    </td>
+                  </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function applyForRFP(rfpNo) {
+        fetch("/applyRFP", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          // Optionally, include data in the request body
+          body: JSON.stringify({ rfpNo: rfpNo }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.text(); // Return response text
+          })
+          .then((data) => {
+            console.log("Response:", data);
+            window.location.href = "/createQuote";
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
+          });
+      }
+    </script>
+  </body>
+</html>

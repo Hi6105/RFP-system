@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFP System</title>
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <style>
+      #top {
+        display: flex;
+        flex-direction: column;
+        background-color: #b4d4ff;
+        padding: 10px;
+        height: 20vh;
+      }
+      #formFields {
+        display: flex;
+        flex-direction: column;
+        padding: 3%;
+      }
+      #loginBtn {
+        width: 100%;
+        margin: auto;
+        background-color: #176b87;
+        border-radius: 6px;
+        padding: 6px 10px;
+        line-height: normal;
+      }
+      #login {
+        width: 30%;
+        margin: auto;
+        margin-top: 10%;
+        background-color: white;
+        border-radius: 3px;
+      }
+      body {
+        background-color: #eef5ff;
+      }
+      h1,
+      h3 {
+        color: #176b87;
+      }
+      h1 {
+        margin-top: auto;
+        margin-bottom: auto;
+      }
+      h3 {
+        margin-bottom: auto;
+      }
+      a {
+        margin: auto;
+      }
+      .form-container {
+        border: none;
+      }
+      #extraDetails {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .extra {
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login">
+      <div id="top">
+        <h1>Welcome to RFP System</h1>
+        <h3>Sign in to Continue</h3>
+      </div>
+      <div class="form-container">
+        <form id="formFields">
+          <label>Email</label>
+          <input type="email" id="email" name="email" required />
+          <label>Password</label>
+          <input type="password" id="password" name="password" required />
+          <button type="button" onclick="redirect()" id="loginBtn">
+            Login
+          </button>
+        </form>
+      </div>
+      <div id="extraDetails">
+        <a class="extra" href="/signupPage">Register as Admin</a>
+        <a class="extra" href="/vendorRegistration">Register as Vendor</a>
+        <a class="extra" href="/forgotPassword">Forgot your password?</a>
+      </div>
+    </div>
+    <script>
+      function redirect() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        let flag;
+        fetch("/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email, password: password }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            // Return response.json() to parse JSON asynchronously
+            return response.json();
+          })
+          .then((data) => {
+            // Process the response data here
+            // You can redirect to another page here if needed
+            if (data.message != "User Authenticated.") alert(data.message);
+            else {
+              window.location.href = "/Home";
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            // Handle errors
+          });
+      }
+    </script>
+  </body>
+</html>

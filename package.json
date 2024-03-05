@@ -1,0 +1,29 @@
+{
+  "name": "rfp_system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "connect-mongodb-session": "^5.0.0",
+    "ejs": "^3.1.9",
+    "express": "^4.18.3",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.0",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.2.0",
+    "mongoose-long": "^0.8.0",
+    "mongoose-sequence": "^6.0.1",
+    "nodemailer": "^6.9.11",
+    "speakeasy": "^2.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

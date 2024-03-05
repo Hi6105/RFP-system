@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <title>Document</title>
+    <style>
+      #adminLayout {
+        display: flex;
+        flex-direction: row;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #full {
+        display: flex;
+        flex-direction: row;
+      }
+      #welcome {
+        margin-left: auto;
+      }
+      #content {
+        flex: 1;
+      }
+      #logout {
+        text-decoration: none;
+        color: blue;
+        margin-left: 1%;
+      }
+      #nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #home {
+        margin-left: auto;
+      }
+      #categories {
+        padding: 1%;
+      }
+      #categoriesFields {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      #allData {
+        padding: 5%;
+        display: flex;
+        flex-direction: column;
+      }
+      #categoryBox {
+        display: flex;
+        flex-direction: row;
+      }
+      #addCategory {
+        margin-left: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="full">
+      <div id="sideBar"><%- include('../layouts/adminLayout') %></div>
+      <div id="content">
+        <div id="topNav">
+          <span id="welcome">Welcome Admin</span>
+          <a href="/login" id="logout">Logout</a>
+        </div>
+        <div id="afterNav">
+          <div id="nav">
+            <h3>RFP Create</h3>
+            <span id="home">Home / RFP / RFP Create</span>
+          </div>
+
+          <div id="dis">
+            <div class="form-container">
+              <form id="formFields">
+                <label for="itemName">Item Name:</label><br />
+                <input type="text" id="itemName" name="itemName" required />
+
+                <label for="itemDescription">Item Description:</label><br />
+                <input
+                  type="text"
+                  id="itemDescription"
+                  name="itemDescription"
+                  required
+                />
+
+                <label for="quantity">Quantity:</label><br />
+                <input type="number" id="quantity" name="quantity" required />
+
+                <label for="lastDate">Last Date:</label><br />
+                <input type="date" id="lastDate" name="lastDate" required />
+
+                <label for="minPrice">Minimum Price:</label><br />
+                <input type="number" id="minPrice" name="minPrice" required />
+
+                <label for="maxPrice">Maximum Price:</label><br />
+                <input type="number" id="maxPrice" name="maxPrice" required />
+
+                <label for="vendor">Vendor:</label><br />
+                <input
+                  type="text"
+                  id="vendor"
+                  name="vendor"
+                  value="<%= extractedData.map(obj => obj.name).join(', ') %>"
+                />
+
+                <button type="button" onclick="redirect()">Submit</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      function redirect() {
+        const itemName = document.getElementById("itemName").value;
+        const itemDescription =
+          document.getElementById("itemDescription").value;
+        const lastDate = document.getElementById("lastDate").value;
+        const minPrice = document.getElementById("minPrice").value;
+        const quantity = document.getElementById("quantity").value;
+        const maxPrice = document.getElementById("maxPrice").value;
+
+        const data = {
+          quantity: quantity,
+          itemName: itemName,
+          itemDescription: itemDescription,
+          lastDate: lastDate,
+          minPrice: minPrice,
+          maxPrice: maxPrice,
+        };
+
+        // Options for the fetch() request
+        const options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json", // Specify the content type as JSON
+          },
+          body: JSON.stringify(data), // Convert data to JSON format
+        };
+
+        // Make the POST request
+        fetch("/createRFP", options)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json(); // Parse response JSON
+          })
+          .then((data) => {
+            console.log("Response:", data.message); // Handle response data
+            window.location.href = "/RFP_List";
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
+          });
+      }
+      function logout() {
+        window.location.href = "/login";
+      }
+    </script>
+  </body>
+</html>

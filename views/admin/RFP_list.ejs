@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <title>Document</title>
+    <style>
+      #action {
+        color: red;
+        font-style: italic;
+        cursor: pointer;
+      }
+      #adminLayout {
+        display: flex;
+        flex-direction: row;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #full {
+        display: flex;
+        flex-direction: row;
+      }
+      #welcome {
+        margin-left: auto;
+      }
+      #content {
+        flex: 1;
+      }
+      #logout {
+        text-decoration: none;
+        color: blue;
+        margin-left: 1%;
+      }
+      #nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #home {
+        margin-left: auto;
+      }
+      #categories {
+        padding: 1%;
+      }
+      #categoriesFields {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      #allData {
+        padding: 5%;
+        display: flex;
+        flex-direction: column;
+      }
+      #categoryBox {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #addCategory {
+        margin-left: auto;
+        background-color: #65b741;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="full">
+      <div id="sideBar"><%- include('../layouts/adminLayout') %></div>
+      <div id="content">
+        <div id="topNav">
+          <span id="welcome">Welcome Admin</span>
+          <a href="/login" id="logout">Logout</a>
+        </div>
+        <div id="afterNav">
+          <div id="nav">
+            <h3>RFP List</h3>
+            <span id="home">Home / RFP List</span>
+          </div>
+          <div id="dis">
+            <div id="categoryBox">
+              <span>RFP</span>
+              <button id="addCategory" onclick="redirect()">+ Add RFP</button>
+            </div>
+
+            <div id="allData">
+              <table>
+                <thead>
+                  <tr>
+                    <th>RFP No.</th>
+                    <th>RFP Title</th>
+                    <th>RFP Last Date</th>
+                    <th>Min Amount</th>
+                    <th>Max Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% RFPList.forEach(object => { %>
+                  <tr>
+                    <td><%= object.rfpNo %></td>
+                    <td><%= object.itemName %></td>
+                    <td><%= object.lastDate.toDateString() %></td>
+                    <td><%= object.minPrice %></td>
+                    <td><%= object.maxPrice %></td>
+                    <td>
+                      <span
+                        class="badge"
+                        style="background-color: <%= object.status === 'OPEN' ? '#65b741' : 'red' %>;"
+                        ><%= object.status %></span
+                      >
+                    </td>
+                    <td>
+                      <span
+                        onclick="postData('<%= object.rfpNo %>')"
+                        id="action"
+                        style="color: <%= object.action === 'Close' ? 'red' : '#65b741' %>"
+                      >
+                        <%= object.action %>
+                      </span>
+                    </td>
+                  </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function postData(rfpNo) {
+        console.log(rfpNo);
+        fetch("/rfpStatusUpdate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ rfpNo: rfpNo }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            // Return response.json() to parse JSON asynchronously
+            return response.json();
+          })
+          .then((data) => {
+            // Process the response data here
+            // You can redirect to another page here if needed
+            console.log(data.message);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            // Handle errors
+          });
+      }
+      function redirect() {
+        window.location.href = "/RFP_select_category";
+      }
+      function logout() {
+        window.location.href = "/login";
+      }
+    </script>
+  </body>
+</html>
