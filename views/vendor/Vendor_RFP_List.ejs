@@ -64,6 +64,11 @@
       #dis {
         margin-bottom: 2%;
       }
+      #logout {
+        text-decoration: none;
+        color: blue;
+        margin-left: 1%;
+      }
     </style>
   </head>
   <body>
@@ -72,7 +77,7 @@
       <div id="content">
         <div id="topNav">
           <span id="welcome">Welcome Vendor</span>
-          <button id="Logout">Logout</button>
+          <a href="/login" id="logout">Logout</a>
         </div>
         <div id="afterNav">
           <div id="nav">
@@ -107,7 +112,7 @@
                     <td>
                       <span
                         class="badge"
-                        style="background-color: <%= object.status === 'OPEN' ? '#65b741' : 'red' %>"
+                        style="background-color: <%= rfp.status === 'OPEN' ? '#65b741' : 'red' %>"
                         ><%= rfp.status %></span
                       >
                     </td>
@@ -116,7 +121,7 @@
                       <span
                         onclick="applyForRFP('<%= rfp.rfpNo %>')"
                         id="action"
-                        style="color: <%= object.action === 'Close' ? 'red' : '#65b741' %>"
+                        style="color: <%= rfp.action === 'Close' ? 'red' : '#65b741' %>"
                       >
                         Apply
                       </span>

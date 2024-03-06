@@ -49,6 +49,11 @@
         margin-top: 5%;
         margin-bottom: 1%;
       }
+      #logout {
+        text-decoration: none;
+        color: blue;
+        margin-left: 1%;
+      }
     </style>
   </head>
   <body>
@@ -57,49 +62,41 @@
       <div id="content">
         <div id="topNav">
           <span id="welcome">Welcome Vendor</span>
-          <button id="Logout">Logout</button>
+          <a href="/login" id="logout">Logout</a>
         </div>
         <div id="afterNav">
           <div id="nav">
             <h3>RFP Create</h3>
             <span id="home">Home / RFP / quote Create</span>
           </div>
-          <div class="form-container">
-            <form id="formFields">
-              <label for="vendorPrice">Vendor Price</label><br />
-              <input
-                type="text"
-                id="vendorPrice"
-                name="vendorPrice"
-                required
-              /><br /><br />
+          <div id="dis">
+            <div class="form-container">
+              <form id="formFields">
+                <label for="vendorPrice">Vendor Price</label><br />
+                <input
+                  type="text"
+                  id="vendorPrice"
+                  name="vendorPrice"
+                  required
+                />
 
-              <label for="itemDescription">Item Description</label><br />
-              <input
-                type="text"
-                id="itemDescription"
-                name="itemDescription"
-                required
-              /><br /><br />
+                <label for="itemDescription">Item Description</label><br />
+                <input
+                  type="text"
+                  id="itemDescription"
+                  name="itemDescription"
+                  required
+                />
 
-              <label for="quantity">Quantity:</label><br />
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                required
-              /><br /><br />
+                <label for="quantity">Quantity:</label><br />
+                <input type="number" id="quantity" name="quantity" required />
 
-              <label for="totalCost">Total Cost:</label><br />
-              <input
-                type="number"
-                id="totalCost"
-                name="totalCost"
-                required
-              /><br /><br />
+                <label for="totalCost">Total Cost:</label><br />
+                <input type="number" id="totalCost" name="totalCost" required />
 
-              <button type="button" onclick="redirect()">Submit</button>
-            </form>
+                <button type="button" onclick="redirect()">Submit</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

@@ -4,7 +4,6 @@ const RFP_vendor_details = require("../models/RFP_vendor_details");
 const RFP_List = require("../models/RFP_list");
 const otpSchema = require("../models/otp");
 const nodemailer = require("nodemailer");
-const speakeasy = require("speakeasy");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -25,14 +24,35 @@ router.post("/", async (req, res) => {
   }
   console.log(emails);
 
+  const RFPlist = await RFP_List.find({});
+  let rfpNo = RFPlist.length + 1;
+
   let vendors = [];
   for (let i = 0; i < emails.length; i++) {
     let record = await RFP_vendor_details.findOne({ email: emails[i] });
+    //sending mail to the receiver
+    const mailOptions = {
+      from: process.env.MY_EMAIL,
+      to: emails[i],
+      subject: "RFP Recevied",
+      text: `
+      Hello ${record.firstName}
+
+      You've received a RFP.
+      Your RFP number is ${rfpNo}.
+      `,
+    };
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
     vendors.push({ id: record._id });
   }
   console.log(vendors);
-  const RFPlist = await RFP_List.find({});
-  let rfpNo = RFPlist.length + 1;
+
   const newRFP = new RFP_List({
     userID: req.session.userID,
     rfpNo: rfpNo,
@@ -50,22 +70,6 @@ router.post("/", async (req, res) => {
     console.log(err);
   }
 
-  for (let i = 0; i < emails.length; i++) {
-    //sending mail to the receiver
-    const mailOptions = {
-      from: process.env.MY_EMAIL,
-      to: emails[i],
-      subject: "OTP for Email Verification",
-      text: `Your OTP for email verification is:`,
-    };
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    });
-  }
   res.send({ message: "REF created." });
 });
 
