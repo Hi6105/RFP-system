@@ -7,7 +7,6 @@
     <title>Document</title>
     <style>
       #action {
-        color: red;
         font-style: italic;
         cursor: pointer;
       }
@@ -62,8 +61,12 @@
         flex-direction: row;
         align-items: center;
       }
-      #addCategory {
+      #download {
         margin-left: auto;
+        background-color: #65b741;
+      }
+      #addCategory {
+        margin-left: 10px;
         background-color: #65b741;
       }
     </style>
@@ -74,7 +77,7 @@
       <div id="content">
         <div id="topNav">
           <span id="welcome">Welcome Admin</span>
-          <a href="/login" id="logout">Logout</a>
+          <a onclick="logout()" id="logout">Logout</a>
         </div>
         <div id="afterNav">
           <div id="nav">
@@ -84,6 +87,7 @@
           <div id="dis">
             <div id="categoryBox">
               <span>RFP</span>
+              <button id="download" onclick="download()">Download List</button>
               <button id="addCategory" onclick="redirect()">+ Add RFP</button>
             </div>
 
@@ -128,6 +132,27 @@
                   <% }); %>
                 </tbody>
               </table>
+              <div id="pagination">
+                <% if (page > 1) { %>
+                <div class="prevNext">
+                  <a
+                    class="paginationElement"
+                    href="/RFP_List?page=<%= page - 1 %>"
+                    >Previous</a
+                  >
+                </div>
+                <% } %>
+                <span>Page <%= page %> of <%= totalPages %></span>
+                <% if (page < totalPages) { %>
+                <div class="prevNext">
+                  <a
+                    class="paginationElement"
+                    href="/RFP_List?page=<%= page + 1 %>"
+                    >Next</a
+                  >
+                </div>
+                <% } %>
+              </div>
             </div>
           </div>
         </div>
@@ -154,6 +179,9 @@
           .then((data) => {
             // Process the response data here
             // You can redirect to another page here if needed
+            if (data.message == "RFP status updated.") {
+              window.location.href = "/RFP_List";
+            }
             console.log(data.message);
           })
           .catch((error) => {
@@ -165,7 +193,56 @@
         window.location.href = "/RFP_select_category";
       }
       function logout() {
-        window.location.href = "/login";
+        const options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        fetch("/logout", options)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+          })
+          .then((data) => {
+            window.location.href = "/login";
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
+          });
+      }
+      function download() {
+        fetch("/downloadRFPList")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.text(); // Get the response as text
+          })
+          .then((csvData) => {
+            // Create a Blob from the CSV data
+            const blob = new Blob([csvData], { type: "text/csv" });
+
+            // Check for IE or Edge
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+              window.navigator.msSaveOrOpenBlob(blob, "RFP_List.csv");
+            } else {
+              // Create a temporary anchor element
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.setAttribute("download", "RFP_List.csv");
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              window.URL.revokeObjectURL(url); // Release the object URL resource
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
+          });
       }
     </script>
   </body>

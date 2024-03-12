@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
     { serialNumber: serialNumber },
     { status: status, action: action }
   );
-  res.send({ message: "Category Added" });
+  res.send({ message: "Category status updated" });
 });
 
 module.exports = router;

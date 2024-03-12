@@ -26,11 +26,6 @@
       #content {
         flex: 1;
       }
-      #logout {
-        text-decoration: none;
-        color: blue;
-        margin-left: 1%;
-      }
       #nav {
         display: flex;
         flex-direction: row;
@@ -67,7 +62,7 @@
       <div id="content">
         <div id="topNav">
           <span id="welcome">Welcome Admin</span>
-          <a href="/login" id="logout">Logout</a>
+          <a id="logout" onclick="logout()">Logout</a>
         </div>
         <div id="afterNav">
           <div id="nav">
@@ -79,7 +74,7 @@
               <form id="formFields">
                 <label>Category</label>
                 <input type="text" id="category" name="category" />
-                <br />
+                <div class="errors" id="categoryError"></div>
                 <button type="button" onclick="redirect()">Submit</button>
               </form>
             </div>
@@ -90,6 +85,12 @@
     <script>
       function redirect() {
         const category = document.getElementById("category").value;
+
+        if (category == "") {
+          document.getElementById("categoryError").innerHTML =
+            "*Please enter a category";
+          return false;
+        }
 
         const options = {
           method: "POST",
@@ -115,7 +116,25 @@
           });
       }
       function logout() {
-        window.location.href = "/login";
+        const options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        fetch("/logout", options)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+          })
+          .then((data) => {
+            window.location.href = "/login";
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
+          });
       }
     </script>
   </body>

@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 require("mongoose-long")(mongoose);
 
 const RFP_vendor_details_schema = new mongoose.Schema({
+  vendorID: {
+    type: String,
+    required: true,
+  },
   serialNumber: {
     type: Number,
   },
@@ -53,6 +57,10 @@ const RFP_vendor_details_schema = new mongoose.Schema({
   user_type: {
     type: String,
     default: "vendor",
+  },
+  image: {
+    data: Buffer, // Binary image data
+    contentType: String, // Image MIME type
   },
 });
 

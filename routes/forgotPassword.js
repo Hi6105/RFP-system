@@ -1,19 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const RFP_user_details = require("../models/RFP_user_details");
-const otpSchema = require("../models/otp");
-const nodemailer = require("nodemailer");
-const speakeasy = require("speakeasy");
-
-const secret = speakeasy.generateSecret({ length: 10 });
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "hvishwakarma821@gmail.com",
-    pass: "qtlx ovnm oitb uliz",
-  },
-});
+const { saveOtpToDatabase, sendMail, generateOtp } = require("./sendMail");
 
 router.post("/", async (req, res) => {
   const { email } = req.body;
@@ -26,47 +14,17 @@ router.post("/", async (req, res) => {
   const userRecord = await RFP_user_details.findOne({ email: email });
 
   if (userRecord) {
-    //Generate OTP to verify
-    const otp = speakeasy.totp({
-      secret: secret.base32,
-      encoding: "base32",
-    });
-
+    //Generating an OTP
+    const otp = generateOtp();
     //saving otp into DB
-    const recordotp = await otpSchema.findOne({ email: email });
-    if (recordotp) {
-      await otpSchema.findOneAndUpdate(
-        { email: email },
-        { otp: otp },
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
-    } else {
-      const newotp = new otpSchema({
-        email: email,
-        otp: otp,
-      });
-      await newotp.save();
-    }
+    saveOtpToDatabase(email, otp);
 
     //sending mail to the receiver
-    const mailOptions = {
-      from: process.env.MY_EMAIL,
-      to: email,
-      subject: "OTP for Email Verification",
-      text: `Your OTP for email verification is: ${otp}`,
-    };
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Email sent: " + info.response);
-        req.session.email = email;
-        res.send({ message: "Otp sent." });
-      }
-    });
+    const emailMessage = `Your OTP for email verification is: ${otp}`;
+    const subject = "OTP for Email Verification";
+    sendMail(subject, email, emailMessage);
+    req.session.email = email;
+    res.send({ message: "Otp sent." });
   } else {
     res.send({ message: "User does not exists." });
   }

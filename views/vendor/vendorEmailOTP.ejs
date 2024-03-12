@@ -73,6 +73,7 @@
         <form id="formFields">
           <label>OTP</label>
           <input type="number" id="otp" />
+          <div class="error" id="otpError"></div>
           <button type="button" onclick="redirect()" id="submitOtp">
             Submit
           </button>
@@ -87,6 +88,13 @@
     <script>
       function redirect() {
         const otp = document.getElementById("otp").value;
+
+        if (otp == "") {
+          document.getElementById("otpError").innerHTML =
+            "*Please Enter an OTP";
+          return false;
+        }
+
         fetch("/vendorVerifyOtp", {
           method: "POST",
           headers: {
@@ -104,16 +112,42 @@
           .then((data) => {
             // Process the response data here
             // You can redirect to another page here if needed
-
-            if (data.message != "Registration Successful.") alert(data.message);
-            else {
-              alert(data.message);
-              window.location.href = "/login";
+            if (data.errors) {
+              document.getElementById("otpError").innerHTML =
+                data.erros[otpError];
+            } else {
+              if (data.message != "Registration Successful.")
+                alert(data.message);
+              else {
+                alert(data.message);
+                window.location.href = "/login";
+              }
             }
           })
           .catch((error) => {
             console.error("Error:", error);
             // Handle errors
+          });
+      }
+      function logout() {
+        const options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        fetch("/logout", options)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+          })
+          .then((data) => {
+            window.location.href = "/login";
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
           });
       }
     </script>

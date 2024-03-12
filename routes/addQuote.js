@@ -3,15 +3,7 @@ const router = express.Router();
 const RFP_quotes = require("../models/RFP_quotes");
 const RFP_list = require("../models/RFP_list");
 const RFP_user_details = require("../models/RFP_user_details");
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "hvishwakarma821@gmail.com",
-    pass: "qtlx ovnm oitb uliz",
-  },
-});
+const { sendMail } = require("./sendMail");
 
 router.post("/", async (req, res) => {
   const { vendorPrice, itemDescription, quantity, totalCost } = req.body;
@@ -39,6 +31,7 @@ router.post("/", async (req, res) => {
   const adminEmail = adminUserRecord.email;
   const vendorEmail = vendorUserRecord.email;
   const newQuote = new RFP_quotes({
+    rfpNo: rfpNo,
     vendorID: vendorID,
     vendorPrice: vendorPrice,
     itemDescription: itemDescription,
@@ -47,21 +40,13 @@ router.post("/", async (req, res) => {
   });
   await newQuote.save();
 
-  const mailOptions = {
-    from: vendorEmail,
-    to: adminEmail,
-    subject: "OTP for Email Verification",
-    text: `Your OTP for email verification is:`,
-  };
+  const emailMessage = `
+  Hello ${adminUserRecord.firstName},
 
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
-      res.send({ message: "Otp sent." });
-    }
-  });
+  You've received a quote for your RFP number : ${rfpNo}
+  `;
+  const subject = `Quote Received against your RFP`;
+  sendMail(subject, adminEmail, emailMessage);
 
   res.send({ message: "Quote Saved" });
 });

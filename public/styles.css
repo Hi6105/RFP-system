@@ -108,7 +108,7 @@ tr:nth-child(even) {
 .form-container select {
   width: 100%;
   padding: 10px;
-  margin: 5px 0 15px 0;
+  margin: 5px 0 5px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
   box-sizing: border-box;
@@ -127,4 +127,51 @@ tr:nth-child(even) {
   padding: 2px 5px;
   border-radius: 10px;
   color: #fff;
+}
+
+.errors {
+  color: red;
+  font-size: small;
+  margin: 0 0 5px 0;
+  padding: none;
+}
+
+#logout {
+  text-decoration: none;
+  color: blue;
+  margin-left: 1%;
+  cursor: pointer;
+}
+#editDetails {
+  text-decoration: none;
+  cursor: pointer;
+  color: #000;
+}
+
+#pagination {
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.paginationElement {
+  text-decoration: none;
+  color: white;
+}
+
+.prevNext {
+  margin-left: 10px;
+  margin-right: 10px;
+  background-color: #65b741;
+  border: none;
+  border-radius: 6px;
+  width: 90px;
+  padding: 2px;
+  line-height: normal;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
 }

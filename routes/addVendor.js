@@ -1,19 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const RFP_user_details = require("../models/RFP_user_details");
-const nodemailer = require("nodemailer");
-const otpSchema = require("../models/otp");
-const speakeasy = require("speakeasy");
-
-const secret = speakeasy.generateSecret({ length: 10 });
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "hvishwakarma821@gmail.com",
-    pass: "qtlx ovnm oitb uliz",
-  },
-});
+const { generateOtp, saveOtpToDatabase, sendMail } = require("./sendMail");
 
 router.post("/", async (req, res) => {
   const {
@@ -32,72 +20,81 @@ router.post("/", async (req, res) => {
   const record = await RFP_user_details.findOne({ email: email });
 
   //Email and Password validation
+  let flag = false;
+  let errors = {};
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  if (firstName == "") {
+    errors.firstNameError = `*Please enter the First Name`;
+    flag = true;
+  }
+  if (lastName == "") {
+    errors.lastNameError = `*Please enter the Last Name`;
+    flag = true;
+  }
   if (!emailRegex.test(email)) {
-    res.send({ message: "Invalid email address" });
+    errors.emailError = `*Please enter the email in correct format i.e. "abc@gmail.com"`;
+    flag = true;
   }
   if (password.length < 8) {
-    res.send({ message: "Length of the password must be greater that 8." });
+    errors.passwordError = `*Length of password must be greater than 8`;
+    flag = true;
   }
   if (password !== confirmPassword) {
-    res.send({ message: "Both the passwords does not match." });
+    errors.confirmPasswordError = `*Both the passwords must match`;
+    flag = true;
   }
-  console.log(record);
-  if (record) {
-    res.send({ message: "User already exists." });
+  if (revenue == "") {
+    errors.revenueError = `*Both the passwords must match`;
+    flag = true;
+  }
+  if (numberOfEmployees == "") {
+    errors.numberOfEmployeesError = `*Both the passwords must match`;
+    flag = true;
+  }
+  if (GSTno == "") {
+    errors.GSTerror = `*Both the passwords must match`;
+    flag = true;
+  }
+  if (PAN == "") {
+    errors.PANError = `*Both the passwords must match`;
+    flag = true;
+  }
+  if (phoneNumber == "") {
+    errors.phoneNumberError = `*Both the passwords must match`;
+    flag = true;
+  }
+  if (category == "") {
+    errors.categoryError = `*Both the passwords must match`;
+    flag = true;
   }
 
-  //Generate OTP to verify
-  const otp = speakeasy.totp({
-    secret: secret.base32,
-    encoding: "base32",
-  });
+  if (flag) {
+    res.send({ message: "Error", errors: errors });
+  }
 
+  //Generating an OTP
+  const otp = generateOtp();
   //saving otp into DB
-  const recordotp = await otpSchema.findOne({ email: email });
-  if (recordotp) {
-    await otpSchema.findOneAndUpdate(
-      { email: email },
-      { otp: otp },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-  } else {
-    const newotp = new otpSchema({
-      email: email,
-      otp: otp,
-    });
-    await newotp.save();
-  }
+  saveOtpToDatabase(email, otp);
 
   //sending mail to the receiver
-  const mailOptions = {
-    from: process.env.MY_EMAIL,
-    to: email,
-    subject: "OTP for Email Verification",
-    text: `Your OTP for email verification is: ${otp}`,
-  };
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Email sent: " + info.response);
-      req.session.email = email;
-      req.session.firstName = firstName;
-      req.session.lastName = lastName;
-      req.session.password = password;
-      req.session.revenue = revenue;
-      req.session.numberOfEmployees = numberOfEmployees;
-      req.session.GSTno = GSTno;
-      req.session.PAN = PAN;
-      req.session.phoneNumber = phoneNumber;
-      req.session.category = category;
-      res.send({ message: "Otp sent." });
-    }
-  });
+  const emailMessage = `Your OTP for email verification is: ${otp}`;
+  const subject = `OTP for Email verification`;
+  sendMail(subject, email, emailMessage);
+  req.session.email = email;
+  req.session.serialNumber = serialNumber;
+  req.session.firstName = firstName;
+  req.session.lastName = lastName;
+  req.session.password = password;
+  req.session.revenue = revenue;
+  req.session.numberOfEmployees = numberOfEmployees;
+  req.session.GSTno = GSTno;
+  req.session.PAN = PAN;
+  req.session.phoneNumber = phoneNumber;
+  req.session.category = category;
+  res.send({ message: "Otp sent." });
 });
 
 module.exports = router;

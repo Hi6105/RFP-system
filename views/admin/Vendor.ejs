@@ -15,12 +15,6 @@
         display: flex;
         flex-direction: row;
       }
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
       #full {
         display: flex;
         flex-direction: row;
@@ -68,6 +62,9 @@
         padding-left: 2%;
         padding-right: 2%;
       }
+      #pagination {
+        width: 200px;
+      }
     </style>
   </head>
   <body>
@@ -76,7 +73,7 @@
       <div id="content">
         <div id="topNav">
           <span id="welcome">Welcome Admin</span>
-          <a href="/login" id="logout">Logout</a>
+          <a onclick="logout()" id="logout">Logout</a>
         </div>
         <div id="afterNav">
           <div id="nav">
@@ -125,14 +122,32 @@
                 <% }); %>
               </tbody>
             </table>
+            <div id="pagination">
+              <% if (page > 1) { %>
+              <div class="prevNext">
+                <a
+                  class="paginationElement"
+                  href="/vendorData?page=<%= page - 1 %>"
+                  >Previous</a
+                >
+              </div>
+              <% } %>
+              <span>Page <%= page %> of <%= totalPages %></span>
+              <% if (page < totalPages) { %>
+              <div class="prevNext">
+                <a
+                  class="paginationElement"
+                  href="/vendorData?page=<%= page + 1 %>"
+                  >Next</a
+                >
+              </div>
+              <% } %>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <script>
-      function logout() {
-        window.location.href = "/login";
-      }
       function postData(value) {
         const data = {
           serialNumber: value,
@@ -157,6 +172,27 @@
           .then((data) => {
             console.log("Response:", data); // Handle response data
             window.location.href = "/vendorData";
+          })
+          .catch((error) => {
+            console.error("Error:", error); // Handle errors
+          });
+      }
+      function logout() {
+        const options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        fetch("/logout", options)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+          })
+          .then((data) => {
+            window.location.href = "/login";
           })
           .catch((error) => {
             console.error("Error:", error); // Handle errors

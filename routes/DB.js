@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const uri = "mongodb://localhost:27017/RFP";
+const uri = process.env.URL;
 
 const db = () => {
   mongoose
