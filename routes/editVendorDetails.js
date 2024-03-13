@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const RFP_user_details = require("../models/RFP_user_details");
-const RFP_vendor_details = require("../models/RFP_vendor_details");
+const RFP_user_details = require("../models/rfpUserDetails");
+const RFP_vendor_details = require("../models/rfpVendorDetail");
 
 const storage = multer.memoryStorage(); // Store files in memory
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+});
 
 router.post("/", upload.single("image"), async (req, res) => {
   const {
@@ -67,7 +69,6 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
   );
 
-  console.log(req.file.buffer);
   await RFP_vendor_details.findOneAndUpdate(
     { vendorID: req.session.userID },
     {

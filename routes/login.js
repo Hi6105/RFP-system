@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const RFP_user_details = require("../models/RFP_user_details");
-const RFP_vendor_details = require("../models/RFP_vendor_details");
+const RFP_user_details = require("../models/rfpUserDetails");
+const RFP_vendor_details = require("../models/rfpVendorDetail");
 
 let userID, userType;
 
@@ -56,9 +56,9 @@ router.post("/", async (req, res) => {
         });
       }
     }
-
+    console.log(record);
     userID = record._id;
-    userType = record.user_type;
+    userType = record.userType;
 
     req.session.userID = userID;
     req.session.userType = userType;

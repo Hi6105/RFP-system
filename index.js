@@ -5,11 +5,11 @@ const db = require("./routes/DB");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const bodyParser = require("body-parser");
-const RFP_categories = require("./models/RFP_categories");
-const RFP_vendor_details = require("./models/RFP_vendor_details");
-const RFP_List = require("./models/RFP_list");
-const RFP_quotes = require("./models/RFP_quotes");
-const ObjectId = require("mongoose").Types.ObjectId;
+const RFP_categories = require("./models/rfpCategories");
+const RFP_vendor_details = require("./models/rfpVendorDetail");
+const RFP_List = require("./models/rfpList");
+const RFP_quotes = require("./models/rfpQuotes");
+
 db();
 
 // Create a MongoDB session store
@@ -28,7 +28,7 @@ app.use(express.static(__dirname + "/public"));
 // Configuring express-session middleware
 app.use(
   session({
-    secret: "your_secret_key",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     store: store,
@@ -285,29 +285,40 @@ app.use("/admin", (req, res) => {
   if (req.session.userType == "admin") res.render("admin/Dashboard");
   else res.status(404).send("Page not found");
 });
+
 app.use("/categories", async (req, res) => {
   let page = parseInt(req.query.page) || 1;
-  let limit = parseInt(req.query.limit) || 3; // Default limit to 10 items per page
+  let limit = parseInt(req.query.limit) || 3; // Default limit to 3 items per page
 
   try {
     const totalCount = await RFP_categories.countDocuments({});
-    const totalPages = Math.ceil(totalCount / limit);
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1); // Ensure at least one page
 
     // Ensure page is within bounds
     page = Math.min(Math.max(page, 1), totalPages);
 
+    const serialNumber = 1;
     const skip = (page - 1) * limit;
     if (req.session.userType == "admin") {
       const documents = await RFP_categories.find({}).skip(skip).limit(limit);
 
-      res.render("admin/categories", { documents, page, totalPages });
-    } else res.status(404).send("Page not found");
+      // Render the view with documents or an empty array if none found
+      res.render("admin/categories", {
+        documents,
+        page,
+        totalPages,
+        serialNumber,
+      });
+    } else {
+      res.status(404).send("Page not found");
+    }
   } catch (err) {
     // Handle error
     console.error(err);
     res.status(500).send("Internal Server Error");
   }
 });
+
 app.use("/vendorData", async (req, res) => {
   let page = parseInt(req.query.page) || 1;
   let limit = parseInt(req.query.limit) || 3; // Default limit to 10 items per page
@@ -350,6 +361,7 @@ app.use("/resetPassword", (req, res) => {
 });
 app.use("/vendorRegistration", async (req, res) => {
   let documents = await RFP_categories.find({});
+  console.log(documents);
   res.render("vendor/vendorRegistration", { documents });
 });
 app.use("/signup", signup);

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const RFP_List = require("../models/RFP_list");
+const RFP_List = require("../models/rfpList");
 
 router.use("/", async (req, res) => {
   try {

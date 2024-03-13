@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const RFP_quotes = require("../models/RFP_quotes");
-const RFP_list = require("../models/RFP_list");
-const RFP_user_details = require("../models/RFP_user_details");
+const RFP_quotes = require("../models/rfpQuotes");
+const RFP_list = require("../models/rfpList");
+const RFP_user_details = require("../models/rfpUserDetails");
 const { sendMail } = require("./sendMail");
 
 router.post("/", async (req, res) => {

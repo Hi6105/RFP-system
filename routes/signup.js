@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const RFP_user_details = require("../models/RFP_user_details");
+const RFP_user_details = require("../models/rfpUserDetails");
 const otpSchema = require("../models/otp");
 const { saveOtpToDatabase, sendMail, generateOtp } = require("./sendMail");
 

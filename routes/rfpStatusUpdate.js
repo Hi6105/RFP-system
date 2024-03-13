@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const RFP_list = require("../models/RFP_list");
+const RFP_list = require("../models/rfpList");
 
 router.post("/", async (req, res) => {
   const { rfpNo } = req.body;

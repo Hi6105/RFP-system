@@ -11,7 +11,7 @@ const vendorSchema = new mongoose.Schema({
   },
 });
 
-const RFP_list_schema = new mongoose.Schema({
+const rfpListSchema = new mongoose.Schema({
   userID: {
     type: String,
     require: true,
@@ -19,6 +19,7 @@ const RFP_list_schema = new mongoose.Schema({
   rfpNo: {
     type: Number,
     require: true,
+    unique: true,
   },
   itemName: {
     type: String,
@@ -48,16 +49,12 @@ const RFP_list_schema = new mongoose.Schema({
     type: String,
     default: "OPEN",
   },
-  action: {
-    type: String,
-    default: "Close",
-  },
   vendors: {
     type: [vendorSchema],
     required: true,
   },
 });
 
-const RFP_list = mongoose.model("rfp_list", RFP_list_schema);
+const rfpList = mongoose.model("rfp_list", rfpListSchema);
 
-module.exports = RFP_list;
+module.exports = rfpList;

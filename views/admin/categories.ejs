@@ -97,8 +97,8 @@
                 <tbody>
                   <% documents.forEach(object => { %>
                   <tr>
-                    <td><%= object.serialNumber %></td>
-                    <td><%= object.category %></td>
+                    <td><%= serialNumber %><%serialNumber+=1;%></td>
+                    <td><%= object.categoryName %></td>
                     <td>
                       <span
                         class="badge"
@@ -110,9 +110,10 @@
                       <span
                         onclick="postData('<%= object.serialNumber %>')"
                         id="action"
-                        style="color: <%= object.action === 'Deactivate' ? 'red' : '#65b741' %>"
+                        style="color: <%= object.status === 'inactive' ? 'red' : '#65b741' %>"
                       >
-                        <%= object.action %>
+                        <% if(object.status == 'active') { %> Deactivate <%}
+                        else {%> Activate <%}%>
                       </span>
                     </td>
                   </tr>

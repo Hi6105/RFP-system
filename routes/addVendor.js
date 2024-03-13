@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const RFP_user_details = require("../models/RFP_user_details");
 const { generateOtp, saveOtpToDatabase, sendMail } = require("./sendMail");
 
 router.post("/", async (req, res) => {
@@ -17,7 +16,6 @@ router.post("/", async (req, res) => {
     phoneNumber,
     category,
   } = req.body;
-  const record = await RFP_user_details.findOne({ email: email });
 
   //Email and Password validation
   let flag = false;

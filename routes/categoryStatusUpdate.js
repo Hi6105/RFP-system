@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const RFP_categories = require("../models/RFP_categories");
+const RFP_categories = require("../models/rfpCategories");
 
 router.post("/", async (req, res) => {
   const { serialNumber } = req.body;

@@ -123,9 +123,10 @@
                       <span
                         onclick="postData('<%= object.rfpNo %>')"
                         id="action"
-                        style="color: <%= object.action === 'Close' ? 'red' : '#65b741' %>"
+                        style="color: <%= object.status === 'CLOSE' ? 'red' : '#65b741' %>"
                       >
-                        <%= object.action %>
+                        <% if(object.status == 'active') { %> Close <%} else {%>
+                        Open <%}%>
                       </span>
                     </td>
                   </tr>

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const RFP_quotes_schema = new mongoose.Schema({
+const rfpQuotesSchema = new mongoose.Schema({
   rfpNo: {
     type: Number,
     require: true,
@@ -27,6 +27,6 @@ const RFP_quotes_schema = new mongoose.Schema({
   },
 });
 
-const RFP_quotes = mongoose.model("rfp_quotes", RFP_quotes_schema);
+const rfpQuotes = mongoose.model("rfp_quotes", rfpQuotesSchema);
 
-module.exports = RFP_quotes;
+module.exports = rfpQuotes;

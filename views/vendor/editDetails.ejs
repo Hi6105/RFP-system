@@ -226,53 +226,45 @@
 
         if (errors > 0) return false;
 
-        try {
-          // Read the file as binary data
-          const fileReader = new FileReader();
-          fileReader.readAsArrayBuffer(file);
+        const formData = new FormData();
+        formData.append("firstName", firstName);
+        formData.append("lastName", lastName);
+        formData.append("revenue", revenue);
+        formData.append("numberOfEmployees", numberOfEmployees);
+        formData.append("GSTno", GSTno);
+        formData.append("PAN", PAN);
+        formData.append("phoneNumber", phoneNumber);
+        formData.append("category", category);
+        formData.append("image", file);
 
-          fileReader.onload = async () => {
-            // Convert the binary data to a Blob
-            const blob = new Blob([fileReader.result], { type: file.type });
-
-            const formData = new FormData();
-            formData.append("firstName", firstName);
-            formData.append("lastName", lastName);
-            formData.append("revenue", revenue);
-            formData.append("numberOfEmployees", numberOfEmployees);
-            formData.append("GSTno", GSTno);
-            formData.append("PAN", PAN);
-            formData.append("phoneNumber", phoneNumber);
-            formData.append("category", category);
-
-            await fetch("/editVendorDetails", {
-              method: "POST",
-              body: formData,
-            })
-              .then((response) => response.json())
-              .then((data) => {
-                if (data.message == "Error") {
-                  for (const key in data.errors) {
-                    document.getElementById(
-                      `${key}`
-                    ).innerHTML = `${data.errors[key]}`;
-                  }
-                } else {
-                  window.location.href = "/Home";
-                }
-              })
-              .catch((error) => {
-                console.error("Error:", error);
-              });
-          };
-
-          fileReader.onerror = () => {
-            console.error("Error reading file");
-          };
-        } catch (error) {
-          console.error("Error uploading image:", error);
-        }
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        let buffer;
+        reader.onload = () => {
+          buffer = reader.result;
+        };
+        console.log(buffer);
+        fetch("/editVendorDetails", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.message == "Error") {
+              for (const key in data.errors) {
+                document.getElementById(
+                  `${key}`
+                ).innerHTML = `${data.errors[key]}`;
+              }
+            } else {
+              window.location.href = "/Home";
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
       }
+
       function logout() {
         const options = {
           method: "POST",
