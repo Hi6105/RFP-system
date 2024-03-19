@@ -3,18 +3,16 @@ const router = express.Router();
 const RFP_categories = require("../models/rfpCategories");
 
 router.post("/", async (req, res) => {
-  const { serialNumber } = req.body;
+  const { categoryID } = req.body;
   const records = await RFP_categories.findOne({
-    serialNumber: serialNumber,
+    categoryID: categoryID,
   });
-  let status, action;
+  let status;
   if (records.status == "active") status = "inactive";
   else status = "active";
-  if (records.action == "Deactivate") action = "Activate";
-  else action = "Deactivate";
   await RFP_categories.findOneAndUpdate(
-    { serialNumber: serialNumber },
-    { status: status, action: action }
+    { categoryID: categoryID },
+    { status: status }
   );
   res.send({ message: "Category status updated" });
 });

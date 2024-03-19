@@ -7,15 +7,12 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
  * based on the mathces with their corresponding regular expressions.
  */
 const validateEmail = function (email) {
+  return true;
   const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
   return re.test(email);
 };
 
 const rfpUserDetailsSchema = new mongoose.Schema({
-  userID: {
-    type: Number,
-    unique: true,
-  },
   firstName: {
     type: String,
     required: true,
@@ -39,6 +36,10 @@ const rfpUserDetailsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  companyID: {
+    type: Number,
+    required: true,
+  }
 });
 
 // Encrypt password before saving

@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const RFP_categories = require("../models/rfpCategories");
+const rfpCategories = require("../models/rfpCategories");
 
 /**
- *
+ *  Adding a new category
  */
 router.post("/", async (req, res) => {
   const { category } = req.body;
-  const newCategory = new RFP_categories({
+  const newCategory = new rfpCategories({
+    companyID:req.session.companyID,
     categoryName: category,
   });
   await newCategory.save();

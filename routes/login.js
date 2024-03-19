@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const RFP_user_details = require("../models/rfpUserDetails");
 const RFP_vendor_details = require("../models/rfpVendorDetail");
+const bcrypt = require("bcryptjs");
 
 let userID, userType;
 
@@ -28,7 +29,7 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const record = await RFP_user_details.findOne({ email });
+    const record = await RFP_user_details.findOne({ email:email });
 
     if (!record) {
       return res.status(404).json({
@@ -36,8 +37,8 @@ router.post("/", async (req, res) => {
         errors: { emailError: "Email does not exist" },
       });
     }
-
-    if (password !== record.password) {
+    const isPasswordMatch = await bcrypt.compare(password, record.password);
+    if (!isPasswordMatch) {
       return res.status(401).json({
         message: "Password is wrong",
         errors: { passwordError: "Password is wrong" },
@@ -45,10 +46,11 @@ router.post("/", async (req, res) => {
     }
 
     let userType, userID;
-
-    if (record.user_type === "vendor") {
-      const vendorRecord = await RFP_vendor_details.findOne({ email });
-
+    userID = record.userID;
+    userType = record.userType;
+    if (record.userType === "vendor") {
+      const vendorRecord = await RFP_vendor_details.findOne({ userID:userID });
+      console.log(vendorRecord);
       if (!vendorRecord || vendorRecord.status === "Rejected") {
         return res.status(403).json({
           message: "Vendor is not approved by admin",
@@ -56,16 +58,14 @@ router.post("/", async (req, res) => {
         });
       }
     }
-    console.log(record);
-    userID = record._id;
-    userType = record.userType;
 
     req.session.userID = userID;
     req.session.userType = userType;
+    req.session.companyID = record.companyID;
 
     return res.json({ message: "User Authenticated" });
   } catch (error) {
-    console.error("Error:", error);
+    console.error("MongoDB Error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });

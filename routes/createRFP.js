@@ -5,49 +5,46 @@ const RFP_List = require("../models/rfpList");
 const { sendMail } = require("./sendMail");
 
 router.post("/", async (req, res) => {
-  const { itemName, itemDescription, lastDate, minPrice, maxPrice, vendors } =
+  const { itemName, itemDescription, lastDate, minPrice, maxPrice, vendors, quantity } =
     req.body;
-  console.log("HI", vendors);
-  //Finding all the RFP's created till now
-  const RFPlist = await RFP_List.find({});
-  //Determining the RFP number for the creating RFP
-  let rfpNo = RFPlist.length + 1;
+
+  const newRFP = new RFP_List({
+    companyID: req.session.companyID,
+    itemDescription: itemDescription,
+    itemName: itemName,
+    lastDate: lastDate,
+    minPrice: minPrice,
+    maxPrice: maxPrice,
+    quantity:quantity,
+  });
 
   let vendorsInRFP = [];
   //Logic to send email to all the vendors
   for (let i = 0; i < vendors.length; i++) {
-    console.log(vendors[i]);
     let record = await RFP_user_details.findOne({ email: vendors[i] });
     //sending mail to the selected vendor
     const emailMessage = `
     Hello ${record.firstName}
 
     You've received a RFP.
-    Your RFP number is ${rfpNo}.
+    Your RFP number is ${newRFP.rfpNo}.
     `;
     const subject = "RFP Recevied";
     sendMail(subject, vendors[i], emailMessage);
-    vendorsInRFP.push({ id: record._id });
+    vendorsInRFP.push({ userID: record.userID });
   }
-  console.log(vendorsInRFP);
 
   //Saving the RFP into the Database
-  const newRFP = new RFP_List({
-    userID: req.session.userID,
-    rfpNo: rfpNo,
-    itemDescription: itemDescription,
-    itemName: itemName,
-    lastDate: lastDate,
-    minPrice: minPrice,
-    maxPrice: maxPrice,
-    vendors: vendorsInRFP,
-  });
   try {
     await newRFP.save();
-    console.log("saved");
   } catch (err) {
     console.log(err);
   }
+
+  await RFP_List.findOneAndUpdate(
+    { userID: newRFP.userID, rfpNo: newRFP.rfpNo },
+    { vendors: vendorsInRFP }
+  );
 
   res.send({ message: "REF created." });
 });

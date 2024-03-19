@@ -1,13 +1,18 @@
 const mongoose = require("mongoose");
 
 const rfpQuotesSchema = new mongoose.Schema({
+  companyID:{
+    type:Number,
+    required:true,
+  },
   rfpNo: {
     type: Number,
     require: true,
   },
-  vendorID: {
-    type: String,
+  userID: {
+    type: Number,
     require: true,
+    unique: false,
   },
   vendorPrice: {
     type: Number,

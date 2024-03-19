@@ -3,13 +3,13 @@ const router = express.Router();
 const RFP_vendor_details = require("../models/rfpVendorDetail");
 
 router.post("/", async (req, res) => {
-  const { serialNumber } = req.body;
+  const { userID } = req.body;
   await RFP_vendor_details.findOneAndUpdate(
-    { serialNumber: serialNumber },
+    { userID: userID },
     { status: "Approved" },
     { new: true, upsert: true }
   );
-  res.send("Vendor approved");
+  res.send({ message: "Vendor approved" });
 });
 
 module.exports = router;

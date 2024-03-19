@@ -7,6 +7,11 @@
   <link rel="stylesheet" type="text/css" href="/styles.css" />
   <title>Document</title>
   <style>
+    #action {
+      font-style: italic;
+      cursor: pointer;
+    }
+
     #adminLayout {
       display: flex;
       flex-direction: row;
@@ -67,10 +72,17 @@
     #categoryBox {
       display: flex;
       flex-direction: row;
+      align-items: center;
     }
 
-    #addCategory {
+    #download {
       margin-left: auto;
+      background-color: #65b741;
+    }
+
+    #assignRole {
+      margin-left: auto;
+      background-color: #65b741;
     }
   </style>
 </head>
@@ -85,57 +97,49 @@
       </div>
       <div id="afterNav">
         <div id="nav">
-          <h3>RFP Quotes</h3>
-          <span id="home">Home / RFP Quotes</span>
+          <h3>Access Roles</h3>
+          <span id="home">Home / Access Roles</span>
         </div>
         <div id="dis">
           <div id="categoryBox">
-            <span>RFP Quotes</span>
+            <span>Access Roles</span>
+            <button id="assignRole" onclick="redirect()">Assign Role</button>
           </div>
+
           <div id="allData">
             <table>
               <thead>
                 <tr>
-                  <th>RFP No.</th>
-                  <th>Item Name</th>
-                  <th>Vendor ID</th>
-                  <th>Vendor Price</th>
-                  <th>Quantity</th>
-                  <th>Total Price</th>
+                  <th>S. No.</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
                 </tr>
               </thead>
               <tbody>
-                <% data.forEach(rfp => { %>
+                <% subAdmins.forEach(object => { %>
                 <tr>
-                  <td><%= rfp.rfpNo %></td>
-                  <td><%= rfp.itemName %></td>
-                  <td><%= rfp.vendorID %></td>
-                  <td><%= rfp.vendorPrice %></td>
-                  <td><%= rfp.quantity %></td>
-                  <td><%= rfp.totalCost %></td>
+                  <td><%= serialNumber %><% serialNumber+=1 %></td>
+                  <td><%= object.firstName %></td>
+                  <td><%= object.lastName %></td>
+                  <td><%= object.email %></td>
+                  <td><%= object.userType %></td>
                 </tr>
                 <% }); %>
               </tbody>
             </table>
-            <div id="pagination">
-              <% if (page > 1) { %>
-              <div class="prevNext">
-                <a class="paginationElement" href="/RFP_Quotes?page=<%= page - 1 %>">Previous</a>
-              </div>
-              <% } %>
-              <span>Page <%= page %> of <%= totalPages %></span>
-              <% if (page < totalPages) { %>
-              <div class="prevNext">
-                <a class="paginationElement" href="/RFP_Quotes?page=<%= page + 1 %>">Next</a>
-              </div>
-              <% } %>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
   <script>
+    function redirect() {
+      window.location.href = "/assignRoles";
+    }
+
     function logout() {
       const options = {
         method: "POST",

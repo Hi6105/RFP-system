@@ -5,10 +5,13 @@ const db = require("./routes/DB");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const bodyParser = require("body-parser");
-const RFP_categories = require("./models/rfpCategories");
-const RFP_vendor_details = require("./models/rfpVendorDetail");
+const rfpCategories = require("./models/rfpCategories");
+const rfpVendorDetails = require("./models/rfpVendorDetail");
 const RFP_List = require("./models/rfpList");
 const RFP_quotes = require("./models/rfpQuotes");
+const rfpUserDetails = require("./models/rfpUserDetails");
+const rfpCompany = require("./models/company");
+const path = require("path");
 
 db();
 
@@ -23,7 +26,7 @@ store.on("error", function (error) {
   console.error("Session Store Error:", error);
 });
 
-app.use(express.static(__dirname + "/public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Configuring express-session middleware
 app.use(
@@ -44,13 +47,13 @@ app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 let documents;
 const obtainCategories = async () => {
-  documents = await RFP_categories.find({});
+  documents = await rfpCategories.find({});
 };
 obtainCategories();
 
 let vendorList;
 const obtainVendors = async () => {
-  vendorList = await RFP_vendor_details.find({});
+  vendorList = await rfpVendorDetails.find({});
 };
 obtainVendors();
 
@@ -72,7 +75,18 @@ const categoryStatusUpdate = require("./routes/categoryStatusUpdate");
 const rfpStatusUpdate = require("./routes/rfpStatusUpdate");
 const editVendorDetails = require("./routes/editVendorDetails");
 const downloadRFPList = require("./routes/downloadRFP");
+const uploadCategory = require("./routes/uploadCategory");
+const setAdminRole = require("./routes/setAdminRole");
+const addSubAdmin = require("./routes/addSubAdmin");
+const setCompany = require("./routes/setCompany");
+const downloadSampleCategories = require("./routes/downloadSampleCategory");
 
+
+app.use("/downloadSampleCategories", downloadSampleCategories);
+app.use("/setCompany", setCompany);
+app.use("/addSubAdmin", addSubAdmin);
+app.use("/setAdminRole", setAdminRole);
+app.use("/uploadCategory", uploadCategory);
 app.use("/downloadRFPList", downloadRFPList);
 app.use("/editVendorDetails", editVendorDetails);
 app.use("/rfpStatusUpdate", rfpStatusUpdate);
@@ -89,38 +103,68 @@ app.use("/applyRFP", applyRFP);
 app.use("/addQuote", addQuote);
 app.use("/categoryStatusUpdate", categoryStatusUpdate);
 
+app.use("/assignRoles", (req, res) => {
+  const userType = req.session.userType;
+  res.render("admin/assignRole", { userType });
+});
+
+app.use("/selectCompany", async (req, res) => {
+  const companies = await rfpCompany.find({});
+  res.render("vendor/selectCompany", { companies });
+});
+
+app.use("/accessRoles", async (req, res) => {
+  const userType = req.session.userType;
+  if (userType == "Super Admin") {
+    const subAdmins = await rfpUserDetails.find({
+      companyID: req.session.companyID,
+      userType: { $in: ["Accounts", "Procurement Manager"] },
+    });
+    let serialNumber = 1;
+    res.render("admin/accessRole", { subAdmins, serialNumber, userType });
+  } else res.status(404).send("Page not Found");
+});
+
+app.use("/selectAdminRole", (req, res) => {
+  res.render("selectAdminRole");
+});
+
 app.use("/logout", (req, res) => {
   req.session.destroy();
   res.status(200).send("logout success");
 });
 
 app.use("/editDetails", async (req, res) => {
-  if (req.session.userType == "vendor") {
-    let documents = await RFP_categories.find({ status: "active" });
-    res.render("vendor/editDetails", { documents });
+  const userType = req.session.userType; 
+  if (userType == "vendor") {
+    let documents = await rfpCategories.find({ status: "active" });
+    res.render("vendor/editDetails", { documents ,userType});
   } else res.status(404).send("Page not found");
 });
 
 app.use("/create_RFP", async (req, res) => {
-  if (req.session.userType == "admin") {
+  const userType = req.session.userType;
+  if (userType == "Super Admin" || userType == "Procurement Manager") {
     await obtainCategories();
     await obtainVendors();
     let vendors;
-    console.log(req.session.category);
-    vendors = await RFP_vendor_details.find({ category: req.session.category });
-    const extractedData = vendors.map((vendor) => {
-      return { name: vendor.firstName, email: vendor.email };
-    });
+    vendors = await rfpVendorDetails.find({ category: req.session.category });
+    let extractedData = [];
+    for (let i = 0; i < vendors.length; i++) {
+      const userID = vendors[i].userID;
+      const vendor = await rfpUserDetails.findOne({ userID: userID });
+      extractedData.push({ email: vendor.email, name: vendor.firstName });
+    }
     req.session.extractedData = extractedData;
-    console.log(extractedData);
-    res.render("admin/create_RFP", { extractedData });
+    res.render("admin/create_RFP", { extractedData, userType });
   } else {
     res.status(404).send("Page not found");
   }
 });
 
 app.use("/createQuote", (req, res) => {
-  if (req.session.userType == "vendor") res.render("vendor/createQuote");
+  const userType = req.session.userType;
+  if (userType == "vendor") res.render("vendor/createQuote", { userType });
   else res.status(404).send("Page not found");
 });
 
@@ -129,7 +173,9 @@ app.use("/Vendor_RFP_List", async (req, res) => {
   let limit = parseInt(req.query.limit) || 3; // Default limit to 10 items per page
 
   try {
+    const companyID = req.session.companyID;
     const totalCount = await RFP_List.countDocuments({
+      companyID: companyID,
       "vendors.id": req.session.userID,
     });
     const totalPages = Math.ceil(totalCount / limit);
@@ -137,20 +183,23 @@ app.use("/Vendor_RFP_List", async (req, res) => {
     // Ensure page is within bounds
     page = Math.min(Math.max(page, 1), totalPages);
 
-    const skip = (page - 1) * limit;
+    let skip = (page - 1) * limit;
+    if (skip < 0) skip = 0;
 
-    if (req.session.userType == "vendor") {
+    const userType = req.session.userType;
+
+    if (userType == "vendor") {
       let Vendor_RFP_List;
-      console.log(req.session.userID);
       Vendor_RFP_List = await RFP_List.find({
-        "vendors.id": req.session.userID,
+        companyID: companyID,
+        "vendors.userID": req.session.userID,
       })
         .skip(skip)
         .limit(limit);
       Vendor_RFP_List = Vendor_RFP_List.map((rfpRecord) => {
         let applied = false;
         rfpRecord.vendors.map((vendor) => {
-          if (vendor.id == req.session.userID) {
+          if (vendor.userID == req.session.userID) {
             applied = vendor.applied;
           }
         });
@@ -164,7 +213,6 @@ app.use("/Vendor_RFP_List", async (req, res) => {
           maxPrice: rfpRecord.maxPrice,
           minPrice: rfpRecord.minPrice,
           status: rfpRecord.status,
-          action: rfpRecord.action,
           applied: applied,
         };
       });
@@ -173,6 +221,7 @@ app.use("/Vendor_RFP_List", async (req, res) => {
         Vendor_RFP_List,
         page,
         totalPages,
+        userType,
       });
     } else {
       res.status(404).send("Page not found");
@@ -184,36 +233,64 @@ app.use("/Vendor_RFP_List", async (req, res) => {
   }
 });
 
-app.use("/Home", (req, res) => {
-  if (req.session.userType == "admin") res.render("admin/Dashboard");
-  else if (req.session.userType == "vendor") res.render("vendor/dashboard");
-  else res.status(404).send("Page not found");
+app.use("/Home", async (req, res) => {
+  const userType = req.session.userType;
+  if (
+    userType == "Super Admin" ||
+    userType == "Accounts" ||
+    userType == "Procurement Manager"
+  )
+    res.render("admin/Dashboard", { userType });
+  else if (userType == "vendor") {
+    const user = await rfpUserDetails.findOne({ userID: req.session.userID });
+    const vendor = await rfpVendorDetails.findOne({ userID: user.userID });
+    let formattedPath;
+    if (vendor.image) {
+      const path = vendor.image.path;
+      formattedPath = "public/" + path.replace(/\\/g, "/");
+      console.log(path, formattedPath);
+    }
+    res.render("vendor/dashboard", { formattedPath, userType });
+  } else res.status(404).send("Page not found");
 });
 
 app.use("/RFP_select_category", async (req, res) => {
-  if (req.session.userType == "admin") {
-    let documents = await RFP_categories.find({ status: "active" });
-    res.render("admin/RFP_select_category", { documents });
+  const userType = req.session.userType;
+  if (userType == "Super Admin" || userType == "Procurement Manager") {
+    let documents = await rfpCategories.find({
+      companyID: req.session.companyID,
+      status: "active",
+    });
+    res.render("admin/RFP_select_category", { documents, userType });
   } else res.status(404).send("Page not found");
 });
 
 app.use("/RFP_List", async (req, res) => {
   let page = parseInt(req.query.page) || 1;
-  let limit = parseInt(req.query.limit) || 3; // Default limit to 10 items per page
+  let limit = parseInt(req.query.limit) || 3; // Default limit to 3 items per page
 
   try {
-    const totalCount = await RFP_List.countDocuments({});
-    const totalPages = Math.ceil(totalCount / limit);
+    const companyID = req.session.companyID;
+    const totalCount = await RFP_List.countDocuments({ companyID: companyID });
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
     // Ensure page is within bounds
     page = Math.min(Math.max(page, 1), totalPages);
 
-    const skip = (page - 1) * limit;
+    let skip = (page - 1) * limit;
+    if (skip < 0) skip = 0;
 
-    if (req.session.userType == "admin") {
-      const RFPList = await RFP_List.find({}).skip(skip).limit(limit);
+    const userType = req.session.userType;
+    if (
+      userType == "Super Admin" ||
+      userType == "Accounts" ||
+      userType == "Procurement Manager"
+    ) {
+      const RFPList = await RFP_List.find({ companyID: companyID })
+        .skip(skip)
+        .limit(limit);
 
-      res.render("admin/RFP_List", { RFPList, page, totalPages });
+      res.render("admin/RFP_List", { RFPList, page, totalPages, userType });
     } else res.status(404).send("Page not found");
   } catch (err) {
     // Handle error
@@ -221,10 +298,12 @@ app.use("/RFP_List", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
 app.use("/approveVendor", approveVendor);
 app.use("/addCategory", (req, res) => {
-  if (req.session.userType == "admin") {
-    res.render("admin/addcategory");
+  const userType = req.session.userType;
+  if (userType == "Super Admin" || userType == "Procurement Manager") {
+    res.render("admin/addcategory", { userType });
   } else res.status(404).send("Page not found");
 });
 
@@ -233,38 +312,41 @@ app.use("/RFP_Quotes", async (req, res) => {
   let limit = parseInt(req.query.limit) || 3; // limit to 3 items per page
 
   try {
-    const totalCount = await RFP_quotes.countDocuments({});
-    const totalPages = Math.ceil(totalCount / limit);
+    const companyID = req.session.companyID;
+    const totalCount = await RFP_quotes.countDocuments({
+      companyID: companyID,
+    });
+    const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
     // Ensure page is within bounds
     page = Math.min(Math.max(page, 1), totalPages);
 
-    const skip = (page - 1) * limit;
+    let skip = (page - 1) * limit;
+    if (skip < 0) skip = 0;
 
-    if (req.session.userType == "admin") {
+    const userType = req.session.userType;
+    if (
+      userType == "Super Admin" ||
+      userType == "Accounts" ||
+      userType == "Procurement Manager"
+    ) {
       let data = [];
-      const RFP_Quotes = await RFP_quotes.find({}).skip(skip).limit(limit);
-      const RFP_list = await RFP_List.find({});
+      const RFP_Quotes = await RFP_quotes.find({ companyID: companyID })
+        .skip(skip)
+        .limit(limit);
       for (let i = 0; i < RFP_Quotes.length; i++) {
-        const vendor = await RFP_vendor_details.findOne({
-          vendorID: RFP_Quotes[i].vendorID,
-        });
-        console.log(vendor);
-        const rfpNo = RFP_Quotes[i].rfpNo;
-        const rfp = RFP_list.find((obj) => obj.rfpNo === rfpNo);
+        const RFP = await RFP_List.findOne({ rfpNo: RFP_Quotes[i].rfpNo });
         data.push({
-          rfpNo: rfpNo,
-          serialNumber: vendor.serialNumber,
-          itemName: rfp.itemName,
+          rfpNo: RFP_Quotes[i].rfpNo,
+          itemName: RFP.itemName,
+          vendorID: RFP_Quotes[i].userID,
           vendorPrice: RFP_Quotes[i].vendorPrice,
           quantity: RFP_Quotes[i].quantity,
           totalCost: RFP_Quotes[i].totalCost,
         });
       }
 
-      console.log(data);
-
-      res.render("admin/RFP_quotes", { data, page, totalPages });
+      res.render("admin/RFP_quotes", { data, page, totalPages, userType });
     } else res.status(404).send("Page not found");
   } catch (err) {
     // Handle error
@@ -274,9 +356,11 @@ app.use("/RFP_Quotes", async (req, res) => {
 });
 
 app.use("/addCategoryRequest", addCategory);
-app.use("/signupPage", (req, res) => {
+
+app.use("/signupPage", async (req, res) => {
   res.render("signup");
 });
+
 app.use("/adminLayout", (req, res) => {
   if (req.session.userType == "admin") res.render("layouts/adminLayout");
   else res.status(404).send("Page not found");
@@ -291,16 +375,27 @@ app.use("/categories", async (req, res) => {
   let limit = parseInt(req.query.limit) || 3; // Default limit to 3 items per page
 
   try {
-    const totalCount = await RFP_categories.countDocuments({});
+    const totalCount = await rfpCategories.countDocuments({
+      companyID: req.session.companyID,
+    });
     const totalPages = Math.max(Math.ceil(totalCount / limit), 1); // Ensure at least one page
 
     // Ensure page is within bounds
     page = Math.min(Math.max(page, 1), totalPages);
 
     const serialNumber = 1;
-    const skip = (page - 1) * limit;
-    if (req.session.userType == "admin") {
-      const documents = await RFP_categories.find({}).skip(skip).limit(limit);
+    let skip = (page - 1) * limit;
+    if (skip < 0) skip = 0;
+    const userType = req.session.userType;
+    if (
+      userType == "Super Admin" ||
+      userType == "Accounts" ||
+      userType == "Procurement Manager"
+    ) {
+      const documents = await rfpCategories
+        .find({ companyID: req.session.companyID })
+        .skip(skip)
+        .limit(limit);
 
       // Render the view with documents or an empty array if none found
       res.render("admin/categories", {
@@ -308,6 +403,7 @@ app.use("/categories", async (req, res) => {
         page,
         totalPages,
         serialNumber,
+        userType,
       });
     } else {
       res.status(404).send("Page not found");
@@ -324,19 +420,43 @@ app.use("/vendorData", async (req, res) => {
   let limit = parseInt(req.query.limit) || 3; // Default limit to 10 items per page
 
   try {
-    const totalCount = await RFP_vendor_details.countDocuments({});
+    const companyID = req.session.companyID;
+    const totalCount = await rfpVendorDetails.countDocuments({
+      companyID: companyID,
+    });
     const totalPages = Math.ceil(totalCount / limit);
 
     // Ensure page is within bounds
     page = Math.min(Math.max(page, 1), totalPages);
 
-    const skip = (page - 1) * limit;
-    if (req.session.userType == "admin") {
-      const vendorList = await RFP_vendor_details.find({})
+    let skip = (page - 1) * limit;
+    if (skip < 0) skip = 0;
+    const userType = req.session.userType;
+    if (
+      userType == "Super Admin" ||
+      userType == "Accounts" ||
+      userType == "Procurement Manager"
+    ) {
+      let serialNumber = 1;
+      const vendorList = await rfpUserDetails
+        .find({ companyID: companyID, userType: "vendor" })
         .skip(skip)
         .limit(limit);
 
-      res.render("admin/Vendor", { vendorList, page, totalPages });
+      for (let i = 0; i < vendorList.length; i++) {
+        const userID = vendorList[i].userID;
+        const vendor = await rfpVendorDetails.findOne({ userID: userID });
+        vendorList[i].phoneNumber = vendor.phoneNumber;
+        vendorList[i].status = vendor.status;
+      }
+      console.log(vendorList);
+      res.render("admin/Vendor", {
+        vendorList,
+        page,
+        totalPages,
+        serialNumber,
+        userType,
+      });
     } else res.status(404).send("Page not found");
   } catch (err) {
     // Handle error
@@ -360,8 +480,14 @@ app.use("/resetPassword", (req, res) => {
   res.render("resetPassword");
 });
 app.use("/vendorRegistration", async (req, res) => {
-  let documents = await RFP_categories.find({});
-  console.log(documents);
+  const company = await rfpCompany.findOne({
+    companyName: req.session.companyName,
+  });
+  console.log(company);
+  const documents = await rfpCategories.find({
+    companyID: company.companyID,
+    status: "active",
+  });
   res.render("vendor/vendorRegistration", { documents });
 });
 app.use("/signup", signup);

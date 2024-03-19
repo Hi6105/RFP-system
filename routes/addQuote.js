@@ -13,7 +13,7 @@ router.post("/", async (req, res) => {
   const updatedRecord = await RFP_list.findOneAndUpdate(
     {
       rfpNo: rfpNo,
-      "vendors.id": vendorID,
+      "vendors.userID": vendorID,
     },
     {
       $set: {
@@ -25,14 +25,14 @@ router.post("/", async (req, res) => {
     }
   );
 
-  const userID = updatedRecord.userID;
-  const adminUserRecord = await RFP_user_details.findOne({ _id: userID });
-  const vendorUserRecord = await RFP_user_details.findOne({ _id: vendorID });
+  const companyID = updatedRecord.companyID;
+  const adminUserRecord = await RFP_user_details.findOne({ companyID: companyID,userType: "Super Admin" });
+  const vendorUserRecord = await RFP_user_details.findOne({ userID: vendorID });
   const adminEmail = adminUserRecord.email;
-  const vendorEmail = vendorUserRecord.email;
   const newQuote = new RFP_quotes({
+    companyID:req.session.companyID,
     rfpNo: rfpNo,
-    vendorID: vendorID,
+    userID: vendorUserRecord.userID,
     vendorPrice: vendorPrice,
     itemDescription: itemDescription,
     quantity: quantity,

@@ -2,6 +2,20 @@ const mongoose = require("mongoose");
 require("mongoose-long")(mongoose);
 
 /**
+ * Image schema
+ */
+const imageSchema = new mongoose.Schema({
+  imageName: {
+    type: String,
+    required: true,
+  },
+  path: {
+    type: String,
+    default: false,
+  },
+});
+
+/**
  * Funtions to return either true or false
  * based on the mathces with their corresponding regular expressions.
  */
@@ -41,7 +55,7 @@ const rfpVendorDetailSchema = new mongoose.Schema({
     type: String,
     require: true,
     unique: true,
-    validate: [validatePAN, "Please fill a valid PAN Number"],
+    //validate: [validatePAN, "Please fill a valid PAN Number"],
   },
   phoneNumber: {
     type: String,
@@ -59,13 +73,8 @@ const rfpVendorDetailSchema = new mongoose.Schema({
     type: String,
     default: "Rejected",
   },
-  action: {
-    type: String,
-    default: "Approve",
-  },
   image: {
-    data: Buffer, // Binary image data
-    contentType: String, // Image MIME type
+    type: imageSchema,
   },
 });
 

@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const RFP_user_details = require("../models/rfpUserDetails");
+const rfpUserDetails = require("../models/rfpUserDetails");
 const otpSchema = require("../models/otp");
 const { saveOtpToDatabase, sendMail, generateOtp } = require("./sendMail");
 
 router.post("/", async (req, res) => {
-  const { firstName, lastName, email, password, confirmPassword } = req.body;
+  const { firstName, lastName, email, password, confirmPassword, companyName } =
+    req.body;
 
   //Email and Password validation
   let flag = false;
@@ -33,12 +34,16 @@ router.post("/", async (req, res) => {
     errors.confirmPasswordError = `*Both the passwords must match`;
     flag = true;
   }
+  if (companyName == "") {
+    errors.companyNameError = `*Both the passwords must match`;
+    flag = true;
+  }
 
   if (flag) {
     res.status(400).json({ message: "Error", errors: errors });
   }
   //Check if user already exists
-  const record = await RFP_user_details.findOne({ email: email });
+  const record = await rfpUserDetails.findOne({ email: email });
 
   if (record) {
     res.status(400)({
@@ -47,25 +52,22 @@ router.post("/", async (req, res) => {
     });
   }
 
+  //Generating an OTP
+  const otp = generateOtp();
   //saving otp into DB
-  const recordotp = await otpSchema.findOne({ email: email });
-  if (recordotp) {
-    //Generating an OTP
-    const otp = generateOtp();
-    //saving otp into DB
-    saveOtpToDatabase(email, otp);
+  saveOtpToDatabase(email, otp);
 
-    //sending mail to the receiver
-    const emailMessage = `Your OTP for email verification is: ${otp}`;
-    const subject = "OTP for Email Verification";
-    sendMail(subject, email, emailMessage);
-    req.session.email = email;
-    req.session.email = email;
-    req.session.firstName = firstName;
-    req.session.lastName = lastName;
-    req.session.password = password;
-    res.send({ message: "Otp sent." });
-  }
+  //sending mail to the receiver
+  const emailMessage = `Your OTP for email verification is: ${otp}`;
+  const subject = "OTP for Email Verification";
+  sendMail(subject, email, emailMessage);
+  req.session.email = email;
+  req.session.firstName = firstName;
+  req.session.lastName = lastName;
+  req.session.password = password;
+  req.session.companyName = companyName;
+  req.session.userType = "Super Admin";
+  res.send({ message: "Otp sent." });
 });
 
 module.exports = router;

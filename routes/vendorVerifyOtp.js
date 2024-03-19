@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const rfpVendorDetail = require("../models/rfpVendorDetail");
 const rfpUserDetails = require("../models/rfpUserDetails");
+const rfpCompany = require("../models/company");
 const otpSchema = require("../models/otp");
 const { sendMail } = require("./sendMail");
 
@@ -9,8 +10,10 @@ router.post("/", async (req, res) => {
   const { otp } = req.body;
   const email = req.session.email;
   const record = await otpSchema.findOne({ email: email });
-
-  if (record && record.otp === otp) {
+  console.log(record, email, otp);
+  if (record && record.otp == otp) {
+    const company = await rfpCompany.findOne({companyName:req.session.companyName});
+    const companyID = company.companyID;
     try {
       // Create a new user
       const newUser = new rfpUserDetails({
@@ -18,9 +21,9 @@ router.post("/", async (req, res) => {
         lastName: req.session.lastName,
         email: req.session.email,
         password: req.session.password,
-        userType: "vendor", // Corrected field name
+        companyID:companyID,
+        userType: "vendor",
       });
-      // Save the new user
       await newUser.save();
 
       // Create a new vendor detail with the user's ID
@@ -33,6 +36,8 @@ router.post("/", async (req, res) => {
         phoneNumber: req.session.phoneNumber,
         category: req.session.category,
       });
+      
+      // Save the new user
       // Save the new vendor detail
       await newVendor.save();
 
@@ -50,7 +55,7 @@ router.post("/", async (req, res) => {
       res.status(500).send({ message: "Internal Server Error" });
     }
   } else {
-    res.status(400).send({
+    res.status(400).json({
       message: "Otp does not match",
       errors: { otpError: "Otp does not match" },
     });

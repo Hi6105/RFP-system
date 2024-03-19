@@ -2,14 +2,13 @@ const mongoose = require("mongoose");
 const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const rfpCategoriesSchema = new mongoose.Schema({
-  categoryID: {
-    type: Number,
-    unique: true,
+  companyID:{
+    type:Number,
+    required:true,
   },
   categoryName: {
     type: String,
-    require: true,
-    unique: true,
+    required: true,
   },
   status: {
     type: String,

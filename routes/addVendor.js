@@ -82,7 +82,6 @@ router.post("/", async (req, res) => {
   const subject = `OTP for Email verification`;
   sendMail(subject, email, emailMessage);
   req.session.email = email;
-  req.session.serialNumber = serialNumber;
   req.session.firstName = firstName;
   req.session.lastName = lastName;
   req.session.password = password;

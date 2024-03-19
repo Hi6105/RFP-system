@@ -4,7 +4,8 @@ const RFP_List = require("../models/rfpList");
 
 router.use("/", async (req, res) => {
   try {
-    const RFPList = await RFP_List.find({});
+    const companyID = req.session.companyID;
+    const RFPList = await RFP_List.find({companyID:companyID});
 
     const headers = [
       "RFP No.",
@@ -27,7 +28,6 @@ router.use("/", async (req, res) => {
 
     res.setHeader("Content-disposition", "attachment; filename=RFP_List.csv");
     res.set("Content-Type", "text/csv");
-    console.log(csvData);
     res.status(200).send(csvData);
   } catch (error) {
     console.error("Error occurred while downloading RFP list:", error);

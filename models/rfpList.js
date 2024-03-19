@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
+const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const vendorSchema = new mongoose.Schema({
-  id: {
-    type: String,
+  userID: {
+    type: Number,
     required: true,
   },
   applied: {
@@ -12,13 +13,12 @@ const vendorSchema = new mongoose.Schema({
 });
 
 const rfpListSchema = new mongoose.Schema({
-  userID: {
-    type: String,
-    require: true,
+  companyID:{
+    type:Number,
+    required:true,
   },
   rfpNo: {
     type: Number,
-    require: true,
     unique: true,
   },
   itemName: {
@@ -54,6 +54,8 @@ const rfpListSchema = new mongoose.Schema({
     required: true,
   },
 });
+
+rfpListSchema.plugin(AutoIncrement, { inc_field: "rfpNo" });
 
 const rfpList = mongoose.model("rfp_list", rfpListSchema);
 

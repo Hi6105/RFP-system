@@ -1,13 +1,29 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
+const path = require("path");
 const RFP_user_details = require("../models/rfpUserDetails");
 const RFP_vendor_details = require("../models/rfpVendorDetail");
 
-const storage = multer.memoryStorage(); // Store files in memory
-const upload = multer({
-  storage: storage,
+// Set up Multer storage with desired options
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/"); // Save uploaded files to the 'uploads' folder
+  },
+  filename: function (req, file, cb) {
+    // Set filename to include original name and .jpg extension
+    cb(
+      null,
+      file.originalname.replace(path.extname(file.originalname), "") +
+        "-" +
+        Date.now() +
+        ".jpg"
+    );
+  },
 });
+
+// Initialize Multer upload with configured storage
+const upload = multer({ storage: storage });
 
 router.post("/", upload.single("image"), async (req, res) => {
   const {
@@ -69,23 +85,31 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
   );
 
-  await RFP_vendor_details.findOneAndUpdate(
-    { vendorID: req.session.userID },
+  const vendor = await RFP_user_details.findOne({ userID: req.session.userID });
+  const uniqueFileName = req.file.originalname + `/${vendor.userID}`;
+
+  console.log(uniqueFileName, req.file.path);
+
+  const data = await RFP_vendor_details.findOneAndUpdate(
+    { userID: vendor.userID },
     {
-      firstName: firstName,
-      lastName: lastName,
-      revenue: revenue,
-      numberOfEmployees: numberOfEmployees,
-      GSTno: GSTno,
-      PAN: PAN,
-      phoneNumber: phoneNumber,
-      category: category,
-      image: {
-        data: req.file.buffer, // Image data
-        contentType: req.file.mimetype, // Image MIME type
+      $set: {
+        revenue: revenue,
+        numberOfEmployees: numberOfEmployees,
+        GSTno: GSTno,
+        PAN: PAN,
+        phoneNumber: phoneNumber,
+        category: category,
+        "image.imageName": uniqueFileName,
+        "image.path": req.file.path,
       },
+    },
+    {
+      new: true,
+      upsert: true, // Make this update into an upsert
     }
   );
+  console.log(data);
   res.send({ message: "Details updated" });
 });
 
